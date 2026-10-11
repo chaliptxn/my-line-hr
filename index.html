@@ -52,22 +52,23 @@
                 document.getElementById('btn-checkout').style.display = "block";
             }
         }
-      async function main() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (liff.isLoggedIn()) {
-                    userProfile = await liff.getProfile();
-                    
-                    // ---> ให้แสดง User ID บนหน้าจอตรงนี้ <---
-                    document.getElementById('profile').innerText = `User ID ของคุณคือ: ${userProfile.userId}`;
-                    
-                    document.getElementById('btn-checkin').style.display = "block";
-                    document.getElementById('btn-checkout').style.display = "block";
-                } else {
-                    liff.login();
-                }
-            } catch (error) {
-                document.getElementById('profile').innerText = `เกิดข้อผิดพลาดในการโหลด LIFF`;
+      main();
+
+        // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
+        function recordTime(actionType) {
+            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
+                    (error) => { 
+                        // ถ้าเปิด GPS ไม่ทัน หรือไม่อนุญาต ให้ส่งพิกัด 0 ไปก่อนเพื่อให้บันทึกเวลาได้
+                        sendData(actionType, 0, 0); 
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                sendData(actionType, 0, 0);
             }
         }
 
