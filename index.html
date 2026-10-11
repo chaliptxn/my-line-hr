@@ -65,7 +65,13 @@
         function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
             
-            const payload = {
+            // ใช้สร้าง Form ส่งข้อมูลแบบซ่อน เพื่อให้ข้อมูลวิ่งเข้า Google Apps Script ได้ 100% โดยไม่ติด CORS
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = WEB_APP_URL;
+            form.target = '_blank'; // เปิดแบบซ่อนฉากหลัง
+
+            const payloadData = {
                 action: action,
                 userId: userProfile.userId,
                 displayName: userProfile.displayName,
@@ -73,20 +79,20 @@
                 lng: lng
             };
 
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
-                document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย!";
-                setTimeout(() => {
-                    try { liff.closeWindow(); } catch(e) {}
-                }, 2000);
-            })
-            .catch(error => {
-                document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย";
-            });
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'data';
+            input.value = JSON.stringify(payloadData);
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+            
+            // แสดงผลว่าสำเร็จและปิดหน้าต่าง
+            document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย!";
+            setTimeout(() => {
+                try { liff.closeWindow(); } catch(e) {}
+            }, 2000);
         }
     </script>
 </body>
