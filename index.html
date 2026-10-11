@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงเวลาเข้า-ออกงาน</title>
+    <!-- นำเข้า LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; border-radius: 8px; border: none; color: white; cursor: pointer;}
+        #btn-checkin { background-color: #28a745; }
+        #btn-checkout { background-color: #dc3545; }
+        #status { margin-top: 20px; color: #555; }
+    </style>
+</head>
+<body>
+    <h2>ระบบลงเวลา</h2>
+    <p id="profile">กำลังโหลดข้อมูลผู้ใช้...</p>
+    
+    <!-- ปุ่มสำหรับกดเข้าออก -->
+    <button id="btn-checkin" onclick="recordTime('checkin')" style="display:none;">เข้างาน</button>
+    <button id="btn-checkout" onclick="recordTime('checkout')" style="display:none;">ออกงาน</button>
+    
+    <p id="status"></p>
+
+    <script>
+        // ==========================================
+        // 1. ตั้งค่า LIFF ID และ URL ของ Apps Script
+        // ==========================================
+        const LIFF_ID = "ใส่_LIFF_ID_ปุ่มเข้าออกงาน_ของคุณ"; // สร้าง LIFF App อีกอันสำหรับหน้านี้โดยเฉพาะ
+        const WEB_APP_URL = "ใส่_URL_ของ_Apps_Script_ที่ได้จากขั้นตอน_Deploy"; 
+        
+        let userProfile = null;
+
+        // เริ่มต้นการทำงานของ LIFF
+        async function main() {
+            await liff.init({ liffId: LIFF_ID });
+            if (liff.isLoggedIn()) {
+                userProfile = await liff.getProfile();
+                document.getElementById('profile').innerText = `สวัสดีคุณ: ${userProfile.displayName}`;
+                document.getElementById('btn-checkin').style.display = "inline-block";
+                document.getElementById('btn-checkout').style.display = "inline-block";
+            } else {
+                liff.login();
+            }
+        }
+        main();
+
+        // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
+        function recordTime(actionType) {
+            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
+                    (error) => { document.getElementById('status').innerText = "กรุณาเปิดการระบุตำแหน่ง (GPS) ในมือถือ"; },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                document.getElementById('status').innerText = "เบราว์เซอร์นี้ไม่รองรับ GPS";
+            }
+        }
+
+        // ส่งข้อมูลไปที่ Google Apps Script
+        function sendData(action, lat, lng) {
+            document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
+            
+            const payload = {
+                action: action,
+                userId: userProfile.userId,
+                displayName: userProfile.displayName,
+                lat: lat,
+                lng: lng
+            };
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย! กำลังปิดหน้าต่าง...";
+                    setTimeout(() => liff.closeWindow(), 2000); // ปิดหน้าจออัตโนมัติ
+                } else {
+                    document.getElementById('status').innerText = `ผิดพลาด: ${result.message}`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('status').innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+            });
+        }
+    </script>
+</body>
+</html>
