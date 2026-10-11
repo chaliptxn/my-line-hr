@@ -58,30 +58,14 @@
             }
         }
 
-     function sendData(action, lat, lng) {
+        function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูลและส่งแจ้งเตือน...";
             
-            const payload = {
-                action: action,
-                userId: userProfile.userId,
-                displayName: userProfile.displayName,
-                lat: lat,
-                lng: lng
-            };
+            // ส่งข้อมูลพารามิเตอร์ผ่าน URL ตรงไปยัง Google Apps Script
+            const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
 
-            // ใช้ sendBeacon เพื่อส่งข้อมูลเบื้องหลังไปยัง Google Apps Script โดยตรงอย่างแม่นยำ 100%
-            const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-            navigator.sendBeacon(WEB_APP_URL, blob);
-
-            // แสดงข้อความสำเร็จแล้วปิดหน้าต่างกลับเข้าแชท LINE
-            document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
-            setTimeout(() => {
-                try { 
-                    liff.closeWindow(); 
-                } catch(e) {
-                    window.close();
-                }
-            }, 1500);
+            // เปลี่ยนหน้าไปยัง Google Apps Script เพื่อให้ระบบทำงานบันทึกและส่ง LINE สมบูรณ์ 100%
+            window.location.href = targetUrl;
         }
     </script>
 </body>
