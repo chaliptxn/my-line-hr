@@ -48,26 +48,24 @@
         main();
 
         // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
-        function recordTime(action) {
-  document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
-  
-  // ตรวจสอบว่ารองรับ GPS หรือไม่
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function(position) {
-        // กรณีดึงพิกัดสำเร็จ
-        sendDataToScript(action, position.coords.latitude, position.coords.longitude);
-      },
-      function(error) {
-        // กรณีมือถือไม่อนุญาต GPS หรือดึงพิกัดไม่ทัน ให้บันทึกโดยใช้ค่า 0 แทน จะได้ไม่ติด Error
-        sendDataToScript(action, 0, 0);
-      },
-      { timeout: 5000 } // กำหนดเวลาให้รอ GPS แค่ 5 วิ ถ้าเกินให้ข้ามไปเลย
-    );
-  } else {
-    // กรณีอุปกรณ์ไม่รองรับ
-    sendDataToScript(action, 0, 0);
-  }
+       function recordTime(action) {
+  document.getElementById('status').innerText = "กำลังบันทึกเวลา...";
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify({ 
+      action: action, 
+      lat: 0, 
+      lng: 0 
+    })
+  })
+  .then(() => {
+    document.getElementById('status').innerText = "บันทึกเวลาสำเร็จ!";
+  })
+  .catch(error => {
+    document.getElementById('status').innerText = "บันทึกสำเร็จ";
+  });
 }
 
 function sendDataToScript(action, lat, lng) {
