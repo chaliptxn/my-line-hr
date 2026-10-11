@@ -65,19 +65,13 @@
         function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
             
-            const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=0&lng=0`;
+            const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
 
-            // ส่งข้อมูลไปหลังบ้านผ่านเบื้องหลัง
+            // ใช้ fetch แบบซ่อนฉากหลัง (no-cors) เพื่อไม่ให้เด้งไปหน้าอื่น
             fetch(targetUrl, {
                 method: 'GET',
                 mode: 'no-cors'
             });
-
-            // เปลี่ยนให้แสดงปุ่มกดปิดหน้าต่างเอง หรือแจ้งเตือนให้ชัดเจน เพื่อให้ผู้ใช้รู้ว่าเสร็จแล้ว
-            setTimeout(() => {
-                document.getElementById('status').innerHTML = "<b>บันทึกเวลาและแจ้งเตือนสำเร็จแล้ว!</b><br><br>คุณสามารถกดกากบาท (X) มุมขวาบนเพื่อกลับเข้าแชทได้เลยครับ";
-            }, 1000);
-        }
 
             // แสดงข้อความสำเร็จแล้วปิดหน้าต่างทันที
             document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
@@ -104,3 +98,5 @@
     </script>
 </body>
 </html>
+
+
