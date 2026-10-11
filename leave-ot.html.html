@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฟอร์มลางาน และ ขอ OT</title>
+    <!-- นำเข้า LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; padding: 20px; background-color: #f4f6f9; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { font-weight: bold; margin-top: 10px; display: block; color: #555; }
+        select, textarea, input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        textarea { resize: none; height: 100px; }
+        button { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; color: white; background-color: #0066ff; border: none; border-radius: 5px; cursor: pointer; }
+        button:disabled { background-color: #ccc; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; color: #d9534f; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>แบบฟอร์มคำร้อง</h2>
+    <p id="profile" style="text-align: center; color: #666;">กำลังโหลดข้อมูล...</p>
+
+    <!-- เลือกประเภทคำร้อง -->
+    <label for="actionType">ประเภทคำร้อง</label>
+    <select id="actionType" onchange="toggleForm()">
+        <option value="leave">ลางาน</option>
+        <option value="ot">ขอ OT</option>
+    </select>
+
+    <!-- ส่วนของการลางาน (จะซ่อนเมื่อเลือก OT) -->
+    <div id="leaveSection">
+        <label for="leaveType">ประเภทการลา</label>
+        <select id="leaveType">
+            <option value="ลาป่วย">ลาป่วย</option>
+            <option value="ลาพักร้อน">ลาพักร้อน</option>
+            <option value="ลากิจ">ลากิจ</option>
+        </select>
+    </div>
+
+    <!-- รายละเอียด (ใช้ร่วมกันทั้งลาและ OT) -->
+    <label for="details" id="detailsLabel">รายละเอียด (ระบุวันที่/เหตุผล)</label>
+    <textarea id="details" placeholder="เช่น ลาป่วยวันที่ 12 ต.ค. เนื่องจากไข้หวัด..."></textarea>
+
+    <button id="submitBtn" onclick="submitForm()">ส่งคำร้อง</button>
+    <p id="status"></p>
+</div>
+
+<script>
+    // ==========================================
+    // 1. ตั้งค่า LIFF ID และ URL ของ Apps Script
+    // ==========================================
+    const LIFF_ID = "ใส่_LIFF_ID_ฟอร์มลางาน_ของคุณ"; // สร้าง LIFF ใหม่แยกจากปุ่มเข้างาน หรือใช้ตัวเดียวกันแล้วแยกพาธ
+    const WEB_APP_URL = "ใส่_URL_ของ_Apps_Script_ที่ได้จากขั้นตอน_Deploy"; 
+    
+    let userProfile = null;
+
+    // เริ่มต้น LIFF
+    async function main() {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+            userProfile = await liff.getProfile();
+            document.getElementById('profile').innerText = `ผู้ทำรายการ: ${userProfile.displayName}`;
+        } else {
+            liff.login();
+        }
+    }
+    main();
+
+    // สลับฟอร์มระหว่าง ลางาน กับ OT
+    function toggleForm() {
+        const actionType = document.getElementById('actionType').value;
+        const leaveSection = document.getElementById('leaveSection');
+        const detailsLabel = document.getElementById('detailsLabel');
+        const detailsInput = document.getElementById('details');
+
+        if (actionType === 'leave') {
+            leaveSection.classList.remove('hidden');
+            detailsLabel.innerText = "รายละเอียด (ระบุวันที่/เหตุผลการลา)";
+            detailsInput.placeholder = "เช่น ลาตั้งแต่วันที่ 1-2 พ.ย. เนื่องจากมีธุระต่างจังหวัด...";
+        } else {
+            leaveSection.classList.add('hidden');
+            detailsLabel.innerText = "รายละเอียด (ระบุวันที่/เวลาเริ่มและจบ OT)";
+            detailsInput.placeholder = "เช่น ขอทำ OT วันที่ 5 พ.ย. เวลา 18:00 - 21:00 น. เพื่องานบัญชี...";
+        }
+    }
+
+    // ส่งข้อมูล
+    function submitForm() {
+        if (!userProfile) {
+            alert("กรุณารอโหลดข้อมูลโปรไฟล์สักครู่");
+            return;
+        }
+
+        const actionType = document.getElementById('actionType').value;
+        const leaveType = document.getElementById('leaveType').value;
+        const details = document.getElementById('details').value;
+        const statusText = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (details.trim() === "") {
+            statusText.innerText = "กรุณากรอกรายละเอียดให้ครบถ้วน";
+            return;
+        }
+
+        statusText.innerText = "กำลังส่งข้อมูล...";
+        statusText.style.color = "#0066ff";
+        submitBtn.disabled = true; // ป้องกันการกดซ้ำ
+
+        // เตรียมข้อมูลส่งไปที่ Google Apps Script
+        const payload = {
+            action: actionType,
+            userId: userProfile.userId,
+            displayName: userProfile.displayName,
+            leaveType: actionType === 'leave' ? leaveType : '', // ส่งประเภทลาไปเฉพาะเมื่อเลือกลางาน
+            details: details
+        };
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                statusText.innerText = "ส่งคำร้องเรียบร้อย! กำลังปิดหน้าต่าง...";
+                statusText.style.color = "#28a745";
+                setTimeout(() => liff.closeWindow(), 2000);
+            } else {
+                statusText.innerText = `ผิดพลาด: ${result.message}`;
+                statusText.style.color = "#d9534f";
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            statusText.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย";
+            statusText.style.color = "#d9534f";
+            submitBtn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>
