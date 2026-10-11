@@ -12,11 +12,24 @@
         #btn-checkin { background-color: #28a745; }
         #btn-checkout { background-color: #dc3545; }
         #status { margin-top: 20px; color: #555; font-weight: bold; }
+        
+        /* สไตล์สำหรับนาฬิกาเรียลไทม์ */
+        #realtime-clock {
+            font-size: 40px;
+            font-weight: bold;
+            color: #007bff; /* สีน้ำเงินให้ดูเด่นชัด */
+            margin: 5px 0 15px 0;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>ระบบลงเวลา</h2>
+        
+        <!-- จุดแสดงเวลาแบบเรียลไทม์ -->
+        <div id="realtime-clock">00:00:00</div>
+        
         <p id="profile">สวัสดีคุณ: CHALIPTXN</p>
         
         <button id="btn-checkin" onclick="recordTime('checkin')">เข้างาน</button>
@@ -30,6 +43,17 @@
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec"; 
         
         let userProfile = { userId: "CHALIPTXN_ID", displayName: "CHALIPTXN" };
+
+        // ฟังก์ชันสั่งให้นาฬิกาเดินทุกๆ 1 วินาที
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('realtime-clock').innerText = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000); // อัปเดตทุก 1000 มิลลิวินาที (1 วินาที)
+        updateClock(); // เรียกให้เวลาขึ้นมาแสดงทันทีที่เปิดหน้าเว็บ
 
         async function main() {
             try {
@@ -61,10 +85,7 @@
         function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูลและส่งแจ้งเตือน...";
             
-            // ส่งข้อมูลพารามิเตอร์ผ่าน URL ตรงไปยัง Google Apps Script
             const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
-
-            // เปลี่ยนหน้าไปยัง Google Apps Script เพื่อให้ระบบทำงานบันทึกและส่ง LINE สมบูรณ์ 100%
             window.location.href = targetUrl;
         }
     </script>
