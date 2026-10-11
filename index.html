@@ -48,19 +48,45 @@
         main();
 
         // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
-        function recordTime(actionType) {
-            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
-                    (error) => { document.getElementById('status').innerText = "กรุณาเปิดการระบุตำแหน่ง (GPS) ในมือถือ"; },
-                    { enableHighAccuracy: true }
-                );
-            } else {
-                document.getElementById('status').innerText = "เบราว์เซอร์นี้ไม่รองรับ GPS";
-            }
-        }
+        function recordTime(action) {
+  // 1. แสดงข้อความสถานะให้ผู้ใช้รู้ว่ากำลังหาพิกัด
+  document.getElementById('status').innerText = "กำลังค้นหาพิกัด GPS...";
+  
+  // 2. เช็คว่ามือถือรองรับ GPS หรือไม่
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        // ถ้าหาพิกัดสำเร็จ ให้เก็บค่าละติจูดและลองจิจูด
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        // 3. ส่งข้อมูลการเข้า/ออกงาน พร้อมพิกัดไปที่ Apps Script
+        fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            action: action, 
+            lat: lat, 
+            lng: lng 
+          })
+        })
+        .then(response => response.text())
+        .then(result => {
+          document.getElementById('status').innerText = "บันทึกเวลาและพิกัดสำเร็จ!";
+        })
+        .catch(error => {
+          document.getElementById('status').innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        });
+        
+      },
+      function(error) {
+        // ถ้าผู้ใช้ไม่อนุญาต GPS หรือหาตำแหน่งไม่เจอ
+        document.getElementById('status').innerText = "กรุณาเปิด GPS และอนุญาตการเข้าถึงตำแหน่ง";
+      }
+    );
+  } else {
+    document.getElementById('status').innerText = "อุปกรณ์ของคุณไม่รองรับการหาตำแหน่ง";
+  }
+}
 
         // ส่งข้อมูลไปที่ Google Apps Script
         function sendData(action, lat, lng) {
