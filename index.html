@@ -33,26 +33,28 @@
         
         let userProfile = null;
 
-        // เริ่มต้นการทำงานของ LIFF
+        // เริ่มต้นการทำงานของ LIFF (มีฟังก์ชัน main เพียงชุดเดียวเท่านั้น)
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (liff.isLoggedIn()) {
                     userProfile = await liff.getProfile();
+                    
+                    // แสดงชื่อและ User ID เพื่อเช็คความถูกต้อง
                     document.getElementById('profile').innerText = `สวัสดีคุณ: ${userProfile.displayName}`;
+                    
                     document.getElementById('btn-checkin').style.display = "block";
                     document.getElementById('btn-checkout').style.display = "block";
                 } else {
                     liff.login();
                 }
             } catch (error) {
-                // กรณีรันเทสบนเบราว์เซอร์คอมพิวเตอร์ทั่วไปแล้ว LIFF Init ไม่ผ่าน ให้แสดงปุ่มสำรอง
-                document.getElementById('profile').innerText = `สวัสดีคุณ: CHALIPTXN (โหมดทดสอบ)`;
-                document.getElementById('btn-checkin').style.display = "block";
-                document.getElementById('btn-checkout').style.display = "block";
+                document.getElementById('profile').innerText = "เกิดข้อผิดพลาดในการโหลด LIFF";
             }
         }
-      main();
+        
+        // เรียกใช้งานฟังก์ชันหลักทันที
+        main();
 
         // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
         function recordTime(actionType) {
@@ -62,7 +64,6 @@
                 navigator.geolocation.getCurrentPosition(
                     (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
                     (error) => { 
-                        // ถ้าเปิด GPS ไม่ทัน หรือไม่อนุญาต ให้ส่งพิกัด 0 ไปก่อนเพื่อให้บันทึกเวลาได้
                         sendData(actionType, 0, 0); 
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
@@ -86,7 +87,7 @@
 
             fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // สำคัญมาก เพื่อป้องกันปัญหาถูกบล็อกการเชื่อมต่อข้ามโดเมน
+                mode: 'no-cors',
                 body: JSON.stringify(payload)
             })
             .then(() => {
