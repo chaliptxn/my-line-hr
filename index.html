@@ -1,39 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงเวลาเข้า-ออกงาน</title>
+    <title>ระบบลงเวลาทำงาน</title>
+    <!-- ดึงฟอนต์ Prompt จาก Google Fonts ให้ดูทันสมัยขึ้น -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- ดึงไอคอนจาก FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { width: 100%; padding: 15px; font-size: 18px; margin: 10px 0; border-radius: 8px; border: none; color: white; cursor: pointer;}
-        #btn-checkin { background-color: #28a745; }
-        #btn-checkout { background-color: #dc3545; }
-        #status { margin-top: 20px; color: #555; font-weight: bold; }
-        
-        /* สไตล์สำหรับนาฬิกาเรียลไทม์ */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            text-align: center; 
+            margin: 0;
+            padding: 20px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            width: 100%;
+            max-width: 400px; 
+            background: #ffffff; 
+            padding: 35px 25px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+        }
+        h2 { 
+            margin-top: 0;
+            color: #2c3e50; 
+            font-weight: 700;
+            font-size: 22px;
+            margin-bottom: 25px;
+        }
+        .date-text {
+            color: #6c757d;
+            font-size: 15px;
+            margin-bottom: 5px;
+            font-weight: 400;
+        }
         #realtime-clock {
-            font-size: 40px;
-            font-weight: bold;
-            color: #007bff; /* สีน้ำเงินให้ดูเด่นชัด */
-            margin: 5px 0 15px 0;
+            font-size: 48px;
+            font-weight: 700;
+            background: -webkit-linear-gradient(45deg, #0052D4, #4364F7, #6FB1FC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 25px 0;
             letter-spacing: 2px;
+        }
+        .profile-box {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e0e6ed;
+        }
+        #profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e0e6ed;
+            margin-bottom: 10px;
+            display: none; /* ซ่อนไว้ก่อนจนกว่าจะโหลดรูปเสร็จ */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        #profile { 
+            color: #444; 
+            font-weight: 600; 
+            margin: 0;
+            font-size: 16px;
+        }
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            font-size: 18px; 
+            margin: 8px 0; 
+            border-radius: 16px; 
+            border: none; 
+            color: white; 
+            cursor: pointer;
+            font-family: 'Prompt', sans-serif;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        #btn-checkin { 
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 6px 15px rgba(56, 239, 125, 0.3);
+        }
+        #btn-checkout { 
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+            box-shadow: 0 6px 15px rgba(255, 75, 43, 0.3);
+        }
+        #status { 
+            margin-top: 20px; 
+            color: #666; 
+            font-weight: 400; 
+            font-size: 14px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>ระบบลงเวลา</h2>
+        <h2><i class="far fa-calendar-check" style="color: #4364F7;"></i> ลงเวลาทำงาน</h2>
         
+        <!-- แสดงวันที่ -->
+        <div id="current-date" class="date-text"></div>
         <!-- จุดแสดงเวลาแบบเรียลไทม์ -->
         <div id="realtime-clock">00:00:00</div>
         
-        <p id="profile">สวัสดีคุณ: CHALIPTXN</p>
+        <!-- ส่วนโปรไฟล์ -->
+        <div class="profile-box">
+            <img id="profile-pic" src="" alt="Profile Picture">
+            <p id="profile">กำลังโหลดข้อมูลผู้ใช้...</p>
+        </div>
         
-        <button id="btn-checkin" onclick="recordTime('checkin')">เข้างาน</button>
-        <button id="btn-checkout" onclick="recordTime('checkout')">ออกงาน</button>
+        <button id="btn-checkin" onclick="recordTime('checkin', this)">
+            <i class="fas fa-sign-in-alt"></i> เข้างาน
+            <div class="loading-spinner"></div>
+        </button>
+        <button id="btn-checkout" onclick="recordTime('checkout', this)">
+            <i class="fas fa-sign-out-alt"></i> ออกงาน
+            <div class="loading-spinner"></div>
+        </button>
         
         <p id="status"></p>
     </div>
@@ -42,18 +153,26 @@
         const LIFF_ID = "2011967044-KrhZNeBk"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec"; 
         
-        let userProfile = { userId: "CHALIPTXN_ID", displayName: "CHALIPTXN" };
+        let userProfile = { userId: "CHALIPTXN_ID", displayName: "พนักงาน" };
 
-        // ฟังก์ชันสั่งให้นาฬิกาเดินทุกๆ 1 วินาที
+        // ฟังก์ชันอัปเดตเวลาและวันที่
         function updateClock() {
             const now = new Date();
+            
+            // จัดการเวลา
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('realtime-clock').innerText = `${hours}:${minutes}:${seconds}`;
+            
+            // จัดการวันที่ภาษาไทย
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            const dateText = `วัน${days[now.getDay()]}ที่ ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear() + 543}`;
+            document.getElementById('current-date').innerText = dateText;
         }
-        setInterval(updateClock, 1000); // อัปเดตทุก 1000 มิลลิวินาที (1 วินาที)
-        updateClock(); // เรียกให้เวลาขึ้นมาแสดงทันทีที่เปิดหน้าเว็บ
+        setInterval(updateClock, 1000);
+        updateClock();
 
         async function main() {
             try {
@@ -62,14 +181,30 @@
                     const profile = await liff.getProfile();
                     userProfile.userId = profile.userId;
                     userProfile.displayName = profile.displayName;
-                    document.getElementById('profile').innerText = `สวัสดีคุณ: ${profile.displayName}`;
+                    
+                    document.getElementById('profile').innerText = `สวัสดี, คุณ ${profile.displayName}`;
+                    
+                    // ถ้ารูปโปรไฟล์ LINE มี ให้แสดงรูปด้วย
+                    if(profile.pictureUrl) {
+                        const pic = document.getElementById('profile-pic');
+                        pic.src = profile.pictureUrl;
+                        pic.style.display = "inline-block";
+                    }
                 }
-            } catch (error) {}
+            } catch (error) {
+                document.getElementById('profile').innerText = `สวัสดี, ผู้ใช้งาน`;
+            }
         }
         main();
 
-        function recordTime(actionType) {
-            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
+        function recordTime(actionType, btnElement) {
+            // ซ่อนไอคอนเดิม และแสดงไอคอนหมุนโหลด
+            const icon = btnElement.querySelector('i');
+            const spinner = btnElement.querySelector('.loading-spinner');
+            icon.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            
+            document.getElementById('status').innerHTML = "📍 <span style='color:#0052D4'>กำลังดึงพิกัด...</span>";
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -83,8 +218,7 @@
         }
 
         function sendData(action, lat, lng) {
-            document.getElementById('status').innerText = "กำลังบันทึกข้อมูลและส่งแจ้งเตือน...";
-            
+            document.getElementById('status').innerHTML = "🚀 <span style='color:#28a745'>กำลังบันทึกข้อมูล...</span>";
             const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
             window.location.href = targetUrl;
         }
