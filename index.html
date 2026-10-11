@@ -19,7 +19,6 @@
         <h2>ระบบลงเวลา</h2>
         <p id="profile">สวัสดีคุณ: CHALIPTXN</p>
         
-        <!-- แสดงปุ่มทันที ไม่ต้องรอโหลด -->
         <button id="btn-checkin" onclick="recordTime('checkin')">เข้างาน</button>
         <button id="btn-checkout" onclick="recordTime('checkout')">ออกงาน</button>
         
@@ -32,7 +31,6 @@
         
         let userProfile = { userId: "CHALIPTXN_ID", displayName: "CHALIPTXN" };
 
-        // โหลดข้อมูลแบบเบื้องหลัง ป้องกันหน้าจอค้าง
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -42,9 +40,7 @@
                     userProfile.displayName = profile.displayName;
                     document.getElementById('profile').innerText = `สวัสดีคุณ: ${profile.displayName}`;
                 }
-            } catch (error) {
-                // ถ้าโหลดไม่ผ่าน ให้ใช้ค่าสำรองทันทีโดยปุ่มยังใช้งานได้ปกติ
-            }
+            } catch (error) {}
         }
         main();
 
@@ -63,37 +59,25 @@
         }
 
         function sendData(action, lat, lng) {
-            document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
+            document.getElementById('status').innerText = "กำลังบันทึกข้อมูลและส่งแจ้งเตือน...";
             
+            // ส่งข้อมูลผ่าน URL Parameters ไปยัง Google Apps Script โดยตรงเพื่อบันทึกและส่งไลน์
             const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
 
-            // ใช้ fetch แบบซ่อนฉากหลัง (no-cors) เพื่อไม่ให้เด้งไปหน้าอื่น
             fetch(targetUrl, {
                 method: 'GET',
                 mode: 'no-cors'
             });
 
-            // แสดงข้อความสำเร็จแล้วปิดหน้าต่างทันที
+            // แสดงข้อความสำเร็จแล้วปิดหน้าต่างกลับเข้าแชทรวดเร็ว
             document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
             setTimeout(() => {
-                try { liff.closeWindow(); } catch(e) {}
-            }, 1500);
-        }
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'data';
-            input.value = JSON.stringify(payloadData);
-            
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-            
-            // แสดงผลว่าสำเร็จและปิดหน้าต่าง
-            document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย!";
-            setTimeout(() => {
-                try { liff.closeWindow(); } catch(e) {}
-            }, 2000);
+                try { 
+                    liff.closeWindow(); 
+                } catch(e) {
+                    window.close();
+                }
+            }, 1200);
         }
     </script>
 </body>
