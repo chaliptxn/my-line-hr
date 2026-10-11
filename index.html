@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบลงเวลาทำงาน</title>
-    <!-- โหลดฟอนต์ Kanit จาก Google Fonts ให้สวยงาม -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- โหลดฟอนต์ Sarabun (สารบรรณ) จาก Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body {
-            font-family: 'Kanit', sans-serif;
-            background-color: #f0f4f8; /* สีพื้นหลังสว่าง สบายตา */
+            font-family: 'Sarabun', sans-serif; /* เปลี่ยนมาใช้ฟอนต์ Sarabun */
+            background-color: #f0f4f8;
             margin: 0;
             padding: 0;
             display: flex;
@@ -29,8 +29,8 @@
         }
         .header-title {
             color: #1e293b;
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 26px;
+            font-weight: 700;
             margin-bottom: 5px;
             margin-top: 0;
         }
@@ -42,16 +42,16 @@
             margin: 20px 0;
         }
         #clock {
-            font-size: 48px;
-            font-weight: 600;
+            font-size: 50px;
+            font-weight: 700;
             color: #2563eb;
             line-height: 1;
             margin-bottom: 5px;
         }
         #date {
-            font-size: 15px;
+            font-size: 16px;
             color: #64748b;
-            font-weight: 400;
+            font-weight: 500;
         }
         .profile-section {
             display: flex;
@@ -68,19 +68,19 @@
             border: 3px solid #ffffff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             margin-bottom: 12px;
-            display: none; /* ซ่อนไว้ก่อนโหลดรูปเสร็จ */
+            display: none; 
         }
         #user-name {
-            font-size: 16px;
+            font-size: 18px;
             color: #334155;
-            font-weight: 500;
+            font-weight: 600;
         }
         .btn {
             width: 100%;
             padding: 15px;
-            font-size: 18px;
-            font-family: 'Kanit', sans-serif;
-            font-weight: 500;
+            font-size: 20px;
+            font-family: 'Sarabun', sans-serif; /* ใช้ฟอนต์ Sarabun ที่ปุ่มด้วย */
+            font-weight: 600;
             border: none;
             border-radius: 12px;
             color: white;
@@ -93,20 +93,21 @@
             gap: 8px;
         }
         .btn:active {
-            transform: scale(0.97); /* เอฟเฟกต์ตอนกดปุ่ม */
+            transform: scale(0.97); 
         }
         .btn-in {
-            background: #10b981; /* สีเขียวทันสมัย */
+            background: #10b981; 
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         .btn-out {
-            background: #ef4444; /* สีแดงทันสมัย */
+            background: #ef4444; 
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
         #status-msg {
             margin-top: 10px;
-            font-size: 14px;
+            font-size: 16px;
             color: #64748b;
+            font-weight: 500;
         }
         .spinner {
             border: 3px solid rgba(255,255,255,0.3);
@@ -124,19 +125,16 @@
     <div class="card">
         <h2 class="header-title">ระบบลงเวลาทำงาน</h2>
         
-        <!-- กล่องแสดงเวลาแบบเรียลไทม์ -->
         <div class="clock-container">
             <div id="clock">00:00:00</div>
             <div id="date">กำลังโหลดวันที่...</div>
         </div>
 
-        <!-- กล่องแสดงโปรไฟล์ LINE -->
         <div class="profile-section">
             <img id="profile-image" src="" alt="Profile">
             <div id="user-name">สวัสดี, กำลังโหลดข้อมูล...</div>
         </div>
 
-        <!-- ปุ่มเข้างาน / ออกงาน -->
         <button class="btn btn-in" id="btnCheckin" onclick="handleAction('checkin', this)">
             <span class="btn-text">📍 เข้างาน</span>
             <div class="spinner"></div>
@@ -150,12 +148,10 @@
     </div>
 
     <script>
-        // กำหนดตั้งค่า (ใช้ LIFF ID และ Web App URL ของคุณ)
         const LIFF_ID = "2011967044-KrhZNeBk"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec"; 
         let userProfile = { userId: "CHALIPTXN_ID", displayName: "พนักงาน" };
 
-        // ทำให้นาฬิกาเดิน และแสดงวันที่ภาษาไทย
         function updateTime() {
             const now = new Date();
             const hh = String(now.getHours()).padStart(2, '0');
@@ -170,7 +166,6 @@
         setInterval(updateTime, 1000);
         updateTime();
 
-        // โหลดข้อมูล LINE Profile
         async function initLiff() {
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -180,7 +175,6 @@
                     userProfile.displayName = profile.displayName;
                     document.getElementById('user-name').innerText = `สวัสดีคุณ: ${profile.displayName}`;
                     
-                    // แสดงรูปโปรไฟล์ LINE
                     if(profile.pictureUrl) {
                         const img = document.getElementById('profile-image');
                         img.src = profile.pictureUrl;
@@ -193,9 +187,7 @@
         }
         initLiff();
 
-        // เมื่อกดปุ่มเข้างาน/ออกงาน
         function handleAction(action, btn) {
-            // ซ่อนไอคอน และแสดงวงกลมหมุนๆ (Loading)
             const textSpan = btn.querySelector('.btn-text');
             const spinner = btn.querySelector('.spinner');
             textSpan.style.display = 'none';
@@ -213,7 +205,6 @@
             }
         }
 
-        // ส่งข้อมูลไปยัง Google Apps Script
         function sendData(action, lat, lng) {
             document.getElementById('status-msg').innerHTML = "<span style='color:#10b981'>กำลังส่งข้อมูล...</span>";
             const url = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
