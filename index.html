@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -19,6 +19,7 @@
         <h2>ระบบลงเวลา</h2>
         <p id="profile">สวัสดีคุณ: CHALIPTXN</p>
         
+        <!-- แสดงปุ่มทันที ไม่ต้องรอโหลด -->
         <button id="btn-checkin" onclick="recordTime('checkin')">เข้างาน</button>
         <button id="btn-checkout" onclick="recordTime('checkout')">ออกงาน</button>
         
@@ -31,6 +32,7 @@
         
         let userProfile = { userId: "CHALIPTXN_ID", displayName: "CHALIPTXN" };
 
+        // โหลดข้อมูลแบบเบื้องหลัง ป้องกันหน้าจอค้าง
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -40,32 +42,64 @@
                     userProfile.displayName = profile.displayName;
                     document.getElementById('profile').innerText = `สวัสดีคุณ: ${profile.displayName}`;
                 }
-            } catch (error) {}
+            } catch (error) {
+                // ถ้าโหลดไม่ผ่าน ให้ใช้ค่าสำรองทันทีโดยปุ่มยังใช้งานได้ปกติ
+            }
         }
         main();
 
         function recordTime(actionType) {
+            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
+                    (error) => { sendData(actionType, 0, 0); },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                sendData(actionType, 0, 0);
+            }
+        }
+
+        function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
             
-            // ส่งข้อมูลผ่าน URL แบบซ่อนเบื้องหลัง (Image Beacon / fetch GET) เพื่อให้ Apps Script ทำงานโดยไม่ต้องเปลี่ยนหน้าจอ
-            const targetUrl = `${WEB_APP_URL}?action=${actionType}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=0&lng=0`;
+            const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=0&lng=0`;
 
+            // ส่งข้อมูลไปหลังบ้านผ่านเบื้องหลัง
             fetch(targetUrl, {
                 method: 'GET',
                 mode: 'no-cors'
-            })
-            .then(() => {
-                document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
-                setTimeout(() => {
-                    try { liff.closeWindow(); } catch(e) {}
-                }, 1500);
-            })
-            .catch(() => {
-                document.getElementById('status').innerText = "บันทึกเวลาสำเร็จ!";
-                setTimeout(() => {
-                    try { liff.closeWindow(); } catch(e) {}
-                }, 1500);
             });
+
+            // เปลี่ยนให้แสดงปุ่มกดปิดหน้าต่างเอง หรือแจ้งเตือนให้ชัดเจน เพื่อให้ผู้ใช้รู้ว่าเสร็จแล้ว
+            setTimeout(() => {
+                document.getElementById('status').innerHTML = "<b>บันทึกเวลาและแจ้งเตือนสำเร็จแล้ว!</b><br><br>คุณสามารถกดกากบาท (X) มุมขวาบนเพื่อกลับเข้าแชทได้เลยครับ";
+            }, 1000);
+        }
+
+            // แสดงข้อความสำเร็จแล้วปิดหน้าต่างทันที
+            document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
+            setTimeout(() => {
+                try { liff.closeWindow(); } catch(e) {}
+            }, 1500);
+        }
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'data';
+            input.value = JSON.stringify(payloadData);
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+            
+            // แสดงผลว่าสำเร็จและปิดหน้าต่าง
+            document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย!";
+            setTimeout(() => {
+                try { liff.closeWindow(); } catch(e) {}
+            }, 2000);
         }
     </script>
 </body>
