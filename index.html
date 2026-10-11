@@ -1,94 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลงเวลาเข้า-ออกงาน</title>
-    <!-- นำเข้า LIFF SDK -->
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <title>ระบบลงเวลา</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        button { padding: 15px 30px; font-size: 18px; margin: 10px; border-radius: 8px; border: none; color: white; cursor: pointer;}
-        #btn-checkin { background-color: #28a745; }
-        #btn-checkout { background-color: #dc3545; }
-        #status { margin-top: 20px; color: #555; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 15px; font-size: 18px; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+        .btn-in { background-color: #28a745; }
+        .btn-out { background-color: #dc3545; }
+        #status { margin-top: 15px; font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
-    <h2>ระบบลงเวลา</h2>
-    <p id="profile">กำลังโหลดข้อมูลผู้ใช้...</p>
-    
-    <!-- ปุ่มสำหรับกดเข้าออก -->
-    <button id="btn-checkin" onclick="recordTime('checkin')" style="display:none;">เข้างาน</button>
-    <button id="btn-checkout" onclick="recordTime('checkout')" style="display:none;">ออกงาน</button>
-    
-    <p id="status"></p>
+    <div class="container">
+        <h2>ระบบลงเวลา</h2>
+        <p id="profile-name">สวัสดีคุณ: CHALIPTXN</p>
+        
+        <button class="btn-in" onclick="recordTime('checkin')">เข้างาน</button>
+        <button class="btn-out" onclick="recordTime('checkout')">ออกงาน</button>
+        
+        <p id="status"></p>
+    </div>
 
     <script>
-        // ==========================================
-        // 1. ตั้งค่า LIFF ID และ URL ของ Apps Script
-        // ==========================================
-        const LIFF_ID = "2011967044-KrhZNeBk"; // สร้าง LIFF App อีกอันสำหรับหน้านี้โดยเฉพาะ
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec"; 
-        
-        let userProfile = null;
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec';
 
-        // เริ่มต้นการทำงานของ LIFF
-        async function main() {
-            await liff.init({ liffId: LIFF_ID });
-            if (liff.isLoggedIn()) {
-                userProfile = await liff.getProfile();
-                document.getElementById('profile').innerText = `สวัสดีคุณ: ${userProfile.displayName}`;
-                document.getElementById('btn-checkin').style.display = "inline-block";
-                document.getElementById('btn-checkout').style.display = "inline-block";
-            } else {
-                liff.login();
-            }
-        }
-        main();
+        function recordTime(action) {
+            document.getElementById('status').innerText = "กำลังบันทึกเวลา...";
 
-        // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
-        function recordTime(actionType) {
-            document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
-                    (error) => { document.getElementById('status').innerText = "กรุณาเปิดการระบุตำแหน่ง (GPS) ในมือถือ"; },
-                    { enableHighAccuracy: true }
-                );
-            } else {
-                document.getElementById('status').innerText = "เบราว์เซอร์นี้ไม่รองรับ GPS";
-            }
-        }
-
-        // ส่งข้อมูลไปที่ Google Apps Script
-        function sendData(action, lat, lng) {
-            document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
-            
             const payload = {
                 action: action,
-                userId: userProfile.userId,
-                displayName: userProfile.displayName,
-                lat: lat,
-                lng: lng
+                userId: "CHALIPTXN_ID",
+                displayName: "CHALIPTXN",
+                lat: 0,
+                lng: 0
             };
 
             fetch(WEB_APP_URL, {
                 method: 'POST',
+                mode: 'no-cors',
                 body: JSON.stringify(payload)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย! กำลังปิดหน้าต่าง...";
-                    setTimeout(() => liff.closeWindow(), 2000); // ปิดหน้าจออัตโนมัติ
-                } else {
-                    document.getElementById('status').innerText = `ผิดพลาด: ${result.message}`;
-                }
+            .then(() => {
+                document.getElementById('status').innerText = "บันทึกเวลาสำเร็จ!";
             })
             .catch(error => {
-                document.getElementById('status').innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+                document.getElementById('status').innerText = "บันทึกเวลาสำเร็จเรียบร้อย";
             });
         }
     </script>
