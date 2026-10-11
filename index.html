@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -63,40 +63,14 @@
         }
 
         function sendData(action, lat, lng) {
-            document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
+            document.getElementById('status').innerText = "กำลังบันทึกและส่งข้อมูล...";
             
+            // สร้างลิงก์พารามิเตอร์แล้วสั่งเปิดไปที่หน้าเว็บ Google Apps Script โดยตรง เพื่อให้ข้อมูลวิ่งเข้าชีตและ LINE OA ชัวร์ 100%
             const targetUrl = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
 
-            // ใช้ fetch แบบซ่อนฉากหลัง (no-cors) เพื่อไม่ให้เด้งไปหน้าอื่น
-            fetch(targetUrl, {
-                method: 'GET',
-                mode: 'no-cors'
-            });
-
-            // แสดงข้อความสำเร็จแล้วปิดหน้าต่างทันที
-            document.getElementById('status').innerText = "บันทึกเวลาและแจ้งเตือนสำเร็จ!";
-            setTimeout(() => {
-                try { liff.closeWindow(); } catch(e) {}
-            }, 1500);
-        }
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'data';
-            input.value = JSON.stringify(payloadData);
-            
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-            
-            // แสดงผลว่าสำเร็จและปิดหน้าต่าง
-            document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย!";
-            setTimeout(() => {
-                try { liff.closeWindow(); } catch(e) {}
-            }, 2000);
+            // สั่งลิงก์เปลี่ยนหน้าพุ่งตรงไปที่ Google Apps Script ทันที (หน้า Apps Script ที่เราตั้งค่า HtmlService ไว้จะทำการบันทึกและปิดตัวเองกลับเข้า LINE ให้)
+            window.location.href = targetUrl;
         }
     </script>
 </body>
 </html>
-
-
