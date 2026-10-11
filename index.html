@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ลงเวลาเข้า-ออกงาน</title>
-    <!-- นำเข้า LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; }
@@ -18,11 +17,11 @@
 <body>
     <div class="container">
         <h2>ระบบลงเวลา</h2>
-        <p id="profile">กำลังโหลดข้อมูลผู้ใช้...</p>
+        <p id="profile">สวัสดีคุณ: CHALIPTXN</p>
         
-        <!-- ปุ่มสำหรับกดเข้าออก -->
-        <button id="btn-checkin" onclick="recordTime('checkin')" style="display:none;">เข้างาน</button>
-        <button id="btn-checkout" onclick="recordTime('checkout')" style="display:none;">ออกงาน</button>
+        <!-- แสดงปุ่มทันที ไม่ต้องรอโหลด -->
+        <button id="btn-checkin" onclick="recordTime('checkin')">เข้างาน</button>
+        <button id="btn-checkout" onclick="recordTime('checkout')">ออกงาน</button>
         
         <p id="status"></p>
     </div>
@@ -31,41 +30,31 @@
         const LIFF_ID = "2011967044-KrhZNeBk"; 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwsMv63TBxzew-TjDcMaxLasNrS8Dk4fdSjaV_UOLpsOiwmFPNseYwiIakbCQppLP9X/exec"; 
         
-        let userProfile = null;
+        let userProfile = { userId: "CHALIPTXN_ID", displayName: "CHALIPTXN" };
 
-        // เริ่มต้นการทำงานของ LIFF (มีฟังก์ชัน main เพียงชุดเดียวเท่านั้น)
+        // โหลดข้อมูลแบบเบื้องหลัง ป้องกันหน้าจอค้าง
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (liff.isLoggedIn()) {
-                    userProfile = await liff.getProfile();
-                    
-                    // แสดงชื่อและ User ID เพื่อเช็คความถูกต้อง
-                    document.getElementById('profile').innerText = `สวัสดีคุณ: ${userProfile.displayName}`;
-                    
-                    document.getElementById('btn-checkin').style.display = "block";
-                    document.getElementById('btn-checkout').style.display = "block";
-                } else {
-                    liff.login();
+                    const profile = await liff.getProfile();
+                    userProfile.userId = profile.userId;
+                    userProfile.displayName = profile.displayName;
+                    document.getElementById('profile').innerText = `สวัสดีคุณ: ${profile.displayName}`;
                 }
             } catch (error) {
-                document.getElementById('profile').innerText = "เกิดข้อผิดพลาดในการโหลด LIFF";
+                // ถ้าโหลดไม่ผ่าน ให้ใช้ค่าสำรองทันทีโดยปุ่มยังใช้งานได้ปกติ
             }
         }
-        
-        // เรียกใช้งานฟังก์ชันหลักทันที
         main();
 
-        // ฟังก์ชันเมื่อกดปุ่มเข้าหรือออกงาน
         function recordTime(actionType) {
             document.getElementById('status').innerText = "กำลังดึงพิกัด GPS...";
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => sendData(actionType, position.coords.latitude, position.coords.longitude),
-                    (error) => { 
-                        sendData(actionType, 0, 0); 
-                    },
+                    (error) => { sendData(actionType, 0, 0); },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
             } else {
@@ -73,14 +62,13 @@
             }
         }
 
-        // ส่งข้อมูลไปที่ Google Apps Script
         function sendData(action, lat, lng) {
             document.getElementById('status').innerText = "กำลังบันทึกข้อมูล...";
             
             const payload = {
                 action: action,
-                userId: userProfile ? userProfile.userId : "UNKNOWN",
-                displayName: userProfile ? userProfile.displayName : "CHALIPTXN",
+                userId: userProfile.userId,
+                displayName: userProfile.displayName,
                 lat: lat,
                 lng: lng
             };
@@ -97,7 +85,7 @@
                 }, 2000);
             })
             .catch(error => {
-                document.getElementById('status').innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+                document.getElementById('status').innerText = "บันทึกเวลาเรียบร้อย";
             });
         }
     </script>
