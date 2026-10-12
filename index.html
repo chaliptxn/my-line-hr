@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบลงเวลาทำงาน</title>
+    <!-- โหลดฟอนต์ Sarabun (สารบรรณ) -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
@@ -81,23 +82,11 @@
         function handleAction(action, btn) {
             btn.style.opacity = '0.7';
             btn.innerText = 'กำลังโหลด...';
-            document.getElementById('status-msg').innerText = "กำลังดึงพิกัด GPS...";
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => sendData(action, pos.coords.latitude, pos.coords.longitude),
-                    (err) => sendData(action, 0, 0),
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            } else {
-                sendData(action, 0, 0);
-            }
-        }
-
-        function sendData(action, lat, lng) {
             document.getElementById('status-msg').innerHTML = "<span style='color:#10b981'>กำลังส่งข้อมูล...</span>";
-            const url = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=${lat}&lng=${lng}`;
-            window.location.replace(url);
+            
+            // ส่งข้อมูลโดยตรง ไม่ต้องขอ GPS (ส่งค่า lat, lng เป็น 0)
+            const url = `${WEB_APP_URL}?action=${action}&userId=${encodeURIComponent(userProfile.userId)}&displayName=${encodeURIComponent(userProfile.displayName)}&lat=0&lng=0`;
+            window.location.href = url; // ใช้ href เปลี่ยนหน้า เพื่อให้หน้าจอแสดงผลได้ถูกต้อง
         }
     </script>
 </body>
